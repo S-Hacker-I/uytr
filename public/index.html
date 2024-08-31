@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Video Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reddit Video Downloader</h1>
+        <input type="text" id="videoUrl" placeholder="Enter Reddit video URL" />
+        <button onclick="downloadVideo()">Download Video</button>
+        <div id="status"></div>
+    </div>
+    <script>
+        async function downloadVideo() {
+            const url = document.getElementById('videoUrl').value;
+            const statusDiv = document.getElementById('status');
+
+            if (!url) {
+                statusDiv.textContent = 'Please enter a video URL.';
+                return;
+            }
+
+            try {
+                statusDiv.textContent = 'Downloading...';
+
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url }),
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const filename = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = filename;
+                    link.click();
+                    statusDiv.textContent = 'Download complete.';
+                } else {
+                    statusDiv.textContent = 'Error downloading video.';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.textContent = 'Error downloading video.';
+            }
+        }
+    </script>
+</body>
+</html>
