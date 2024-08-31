@@ -1,15 +1,15 @@
 const express = require('express');
-const youtubedl = require('youtube-dl-exec');
+const youtubedl = require('youtube-dl-exec'); // Make sure this is installed
 const path = require('path');
 const sanitizeFilename = require('sanitize-filename');
-const stream = require('stream');
+const { pipeline } = require('stream');
 const util = require('util');
-const fs = require('fs');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Convert callback-based functions to promise-based
-const pipeline = util.promisify(stream.pipeline);
+const pipelineAsync = util.promisify(pipeline);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -35,7 +35,6 @@ app.post('/download', async (req, res) => {
 
         // Step 2: Sanitize and construct the filename
         const title = sanitizeFilename(videoInfo.title);
-        const tempFileName = 'temp_video.mp4'; // Temporary filename for the download
         const finalFileName = `${title}.mp4`; // Final filename
 
         // Step 3: Stream the video directly to the user
@@ -44,11 +43,11 @@ app.post('/download', async (req, res) => {
 
         const downloadStream = youtubedl(videoUrl, {
             format: 'bestvideo+bestaudio/best',
-            output: '-',
+            output: '-', // Stream output
             mergeOutputFormat: 'mp4',
         });
 
-        await pipeline(downloadStream, res);
+        await pipelineAsync(downloadStream, res);
 
     } catch (error) {
         console.error('Error downloading video:', error);
